@@ -21,6 +21,7 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.USE_CREDENTIALS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <uses-sdk android:minSdkVersion="7" >
     </uses-sdk>
@@ -168,7 +169,30 @@
             android:required="false" />
         <service android:name=".activities.ServiceManager">
     	</service>
-    	<receiver android:name=".activities.SetNotification" />
-    	<receiver android:name=".activities.ScheduledTask" />
+    	<service android:name=".activities.AutoDownload">
+    	</service>
+    	<receiver android:name=".activities.SetTimeTrigger" >
+    		<intent-filter>
+            	<action android:name="settimetrigger"/>
+              	<category android:name="android.intent.category.DEFAULT" />
+        	</intent-filter>
+        </receiver>
+    	<receiver android:name=".activities.ExecuteTimeTrigger" >
+    	    <intent-filter>
+            	<action android:name="executetimetrigger"/>
+              	<category android:name="android.intent.category.DEFAULT" />
+        	</intent-filter>
+        </receiver>
+    	<receiver android:name=".activities.DownloadTask" >
+    	     <intent-filter>
+            	<action android:name="downloadtask"/>
+              	<category android:name="android.intent.category.DEFAULT" />
+        	</intent-filter>
+        </receiver>
+    	<receiver android:name=".activities.AutoStartService">  
+    		<intent-filter>  
+        		<action android:name="android.intent.action.BOOT_COMPLETED" />  
+    		</intent-filter>  
+		</receiver>
     </application>
 </manifest>
