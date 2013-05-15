@@ -1,4 +1,4 @@
-package org.odk.collect.android.activities;
+package org.odk.collect.android.receivers;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -13,12 +13,6 @@ import java.util.Map;
 
 import org.json.JSONObject;
 
-import org.odk.collect.android.listeners.FormDownloaderListener;
-import org.odk.collect.android.listeners.FormListDownloaderListener;
-import org.odk.collect.android.logic.FormDetails;
-import org.odk.collect.android.tasks.DownloadFormListTask;
-import org.odk.collect.android.tasks.DownloadFormsTask;
-
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -26,15 +20,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
-import android.os.AsyncTask;
+import android.util.Log;
+
 
 //Set alarm notification for today only
-//If there is no Internet, set default alarm to 1200 and 1700 in getTimeTrigger
 public class SetTimeTrigger extends BroadcastReceiver{
 	@Override
 	public void onReceive(Context context, Intent arg1) {
 		// TODO Auto-generated method stub
+		Log.i("t","SetTimeReceive");
+		
 		AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 		Map <String,List<Calendar>> triggers = getTimeTrigger(context);
 		Calendar now = Calendar.getInstance();
@@ -47,9 +42,8 @@ public class SetTimeTrigger extends BroadcastReceiver{
 			for (int i = 0; i<calendars.size(); i++)
 				if (calendars.get(i).after(now)){
 					Calendar calendar = calendars.get(i);
-					int id = calendar.get(Calendar.HOUR_OF_DAY)*100+calendar.get(Calendar.MINUTE);
-					PendingIntent pi = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_ONE_SHOT);
-					am.cancel(pi);
+					int id = form.length()*10000+calendar.get(Calendar.HOUR_OF_DAY)*100+calendar.get(Calendar.MINUTE);
+					PendingIntent pi = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 					am.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pi);
 				}
 		}
@@ -61,7 +55,7 @@ public class SetTimeTrigger extends BroadcastReceiver{
 		NetworkInfo ni = connectivityManager.getActiveNetworkInfo();
 	    
 		if (ni == null || !ni.isConnected()){
-			triggers.put("mobile_survey_21c",parseCalendars("1200 1700"));
+			retryLater(context);
         	return triggers;
 		}
         	
@@ -69,6 +63,7 @@ public class SetTimeTrigger extends BroadcastReceiver{
 		try{
 			URL url = new URL("http://23.23.166.34/gettime/?id=13");
 			urlConnection = (HttpURLConnection) url.openConnection();
+			urlConnection.setConnectTimeout(2000);
 			String line;
 			StringBuilder builder = new StringBuilder();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
@@ -87,12 +82,11 @@ public class SetTimeTrigger extends BroadcastReceiver{
 	            	triggers.put(key, parseCalendars(value));
 	        }
 		} catch (Exception e) {
-			triggers.put("mobile_survey_21c",parseCalendars("1200 1700"));
+			retryLater(context);
 		}
 		finally {
 			urlConnection.disconnect();
 		}
-
 		return triggers;
 	}
 	static public List<Calendar> parseCalendars(String s){
@@ -106,5 +100,24 @@ public class SetTimeTrigger extends BroadcastReceiver{
 			calendars.add(calendar);
 		}	
 		return calendars;
+	}
+	static public void retryLater(Context context){
+		Log.i("t","SetTimeRetry");
+		
+		Calendar todayEnd = Calendar.getInstance();
+		todayEnd.set(Calendar.HOUR_OF_DAY, 22);
+		todayEnd.set(Calendar.MINUTE, 59);
+		todayEnd.set(Calendar.SECOND, 59);
+		
+		Calendar now = Calendar.getInstance();
+		
+		if (now.before(todayEnd)){
+			AlarmManager nextAlarm = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+			Intent downloadRequest = new Intent(context, SetTimeTrigger.class);
+			PendingIntent nextCheckRequest = PendingIntent.getBroadcast(context, 6, downloadRequest, PendingIntent.FLAG_UPDATE_CURRENT);
+			nextAlarm.set(AlarmManager.RTC_WAKEUP,
+					now.getTimeInMillis()+3600*1000,
+					nextCheckRequest);
+		}
 	}
 }

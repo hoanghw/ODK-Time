@@ -1,5 +1,6 @@
-package org.odk.collect.android.activities;
+package org.odk.collect.android.receivers;
 
+import org.odk.collect.android.activities.FormChooserList;
 import org.odk.collect.android.provider.FormsProviderAPI.FormsColumns;
 
 import android.app.Notification;
@@ -13,12 +14,12 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 
+
 public class ExecuteTimeTrigger extends BroadcastReceiver {
-	public static final int NOTIFICATION_ID = 1234;
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		// TODO Auto-generated method stub
-		NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
 		
 		int icon = android.R.drawable.star_on;
 		CharSequence tickerText = "A Friendly Reminder from QT";
@@ -35,23 +36,29 @@ public class ExecuteTimeTrigger extends BroadcastReceiver {
 		Intent notificationIntent = getFormEntryIntent(context,form);
 		PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_ONE_SHOT);
 		notification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
-		notificationManager.notify(NOTIFICATION_ID, notification);
+		notificationManager.notify(form.hashCode(), notification);
 	}
 	
 	//consider default form?
 	static Intent getFormEntryIntent(Context context, String s){
-		Intent intent;
+		Intent intent = new Intent(context, FormChooserList.class);
 		String where=FormsColumns.JR_FORM_ID+" = '"+s+"'";
-		ContentResolver cr = context.getContentResolver();
-	    Cursor c = cr.query(FormsColumns.CONTENT_URI, null,where, null, null);
-	    if (c.moveToFirst()){
-	    	long idFormsTable = c.getLong(c.getColumnIndex("_id"));
-	    	Uri formUri = ContentUris.withAppendedId(FormsColumns.CONTENT_URI, idFormsTable);
-	    	intent = new Intent(Intent.ACTION_EDIT, formUri);
-	    }else{
-	    	intent = new Intent(context, FormChooserList.class);
-	    }
-	    c.close();
+		//make sure cursor is close
+		Cursor c = null;
+		try{
+			ContentResolver cr = context.getContentResolver();
+		    c = cr.query(FormsColumns.CONTENT_URI, null,where, null, null);
+		    if (c.moveToFirst()){
+		    	long idFormsTable = c.getLong(c.getColumnIndex("_id"));
+		    	Uri formUri = ContentUris.withAppendedId(FormsColumns.CONTENT_URI, idFormsTable);
+		    	intent = new Intent(Intent.ACTION_EDIT, formUri);
+		    }
+		} catch (Exception e){
+			
+		} finally { 
+			c.close();
+		}
+		
 	    return intent;
 	}
 }

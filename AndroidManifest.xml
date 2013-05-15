@@ -22,7 +22,8 @@
     <uses-permission android:name="android.permission.USE_CREDENTIALS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
+	<uses-permission android:name="android.permission.VIBRATE"/>
+	
     <uses-sdk android:minSdkVersion="7" >
     </uses-sdk>
 
@@ -167,32 +168,41 @@
         <uses-library
             android:name="com.google.android.maps"
             android:required="false" />
-        <service android:name=".activities.ServiceManager">
+       
+        <service android:name=".activities.MainService" />
+        
+    	<service android:name=".activities.DownloadService">
+    	    <intent-filter>
+            	<action android:name="downloadservice"/>
+        	</intent-filter>
     	</service>
-    	<service android:name=".activities.AutoDownload">
-    	</service>
-    	<receiver android:name=".activities.SetTimeTrigger" >
+    	
+    	<receiver android:name=".receivers.SetTimeTrigger" 
+    	    android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
     		<intent-filter>
             	<action android:name="settimetrigger"/>
-              	<category android:name="android.intent.category.DEFAULT" />
         	</intent-filter>
         </receiver>
-    	<receiver android:name=".activities.ExecuteTimeTrigger" >
+    	<receiver android:name=".receivers.ExecuteTimeTrigger" >
     	    <intent-filter>
             	<action android:name="executetimetrigger"/>
-              	<category android:name="android.intent.category.DEFAULT" />
         	</intent-filter>
         </receiver>
-    	<receiver android:name=".activities.DownloadTask" >
+    	<receiver android:name=".receivers.DownloadRequest" 
+    	    android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
     	     <intent-filter>
-            	<action android:name="downloadtask"/>
-              	<category android:name="android.intent.category.DEFAULT" />
+            	<action android:name="downloadrequest"/>
         	</intent-filter>
         </receiver>
-    	<receiver android:name=".activities.AutoStartService">  
+    	<receiver android:name=".receivers.AutoStart"
+    	    android:permission="android.permission.RECEIVE_BOOT_COMPLETED">  
     		<intent-filter>  
         		<action android:name="android.intent.action.BOOT_COMPLETED" />  
+        		<category android:name="android.intent.category.DEFAULT" />
     		</intent-filter>  
+    		<intent-filter>
+    		    <action android:name="autostart" />  
+    		</intent-filter>
 		</receiver>
     </application>
 </manifest>

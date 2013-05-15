@@ -30,20 +30,20 @@
             android:title="@string/review_data" />
         <CheckBoxPreference
             android:id="@+id/send_finalized"
-            android:defaultValue="true"
+            android:defaultValue="fasle"
             android:key="send_finalized"
             android:summary="@string/found_in_main"
             android:title="@string/send_data" />
         <CheckBoxPreference
             android:id="@+id/get_blank"
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="get_blank"
             android:summary="@string/found_in_main"
             android:title="@string/get_forms" />
         <CheckBoxPreference
             android:id="@+id/delete_saved"
             android:summary="@string/found_in_main"
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="delete_saved"
             android:title="@string/manage_files" />
     </PreferenceCategory>
@@ -142,13 +142,13 @@
             android:title="@string/save_mid" />
         <CheckBoxPreference
             android:id="@+id/save_as"
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="save_as"
             android:summary="@string/found_at_end"
             android:title="@string/save_form_as" />
         <CheckBoxPreference
             android:id="@+id/mark_as_finalized"
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="mark_as_finalized"
             android:summary="@string/found_at_end"
             android:title="@string/mark_finished" />

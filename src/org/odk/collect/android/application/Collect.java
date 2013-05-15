@@ -15,6 +15,7 @@
 package org.odk.collect.android.application;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -193,8 +194,11 @@ public class Collect extends Application {
         // log.enableWarn(false);
         // log.enableInfo(false);
         // log.enableDebug(false);
-
+        
+        // load admin preferences
+        //PreferenceManager.setDefaultValues(this, R.xml.admin_preferences, true);
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+        
         super.onCreate();
 
         PropertyManager mgr = new PropertyManager(this);

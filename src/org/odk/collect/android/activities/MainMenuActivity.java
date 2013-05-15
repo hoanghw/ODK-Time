@@ -199,7 +199,6 @@ public class MainMenuActivity extends Activity {
 				Intent i = new Intent(getApplicationContext(),
 						FormDownloadList.class);
 				startActivity(i);
-
 			}
 		});
 

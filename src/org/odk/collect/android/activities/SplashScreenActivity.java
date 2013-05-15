@@ -67,7 +67,7 @@ public class SplashScreenActivity extends Activity {
         // this splash screen should be a blank slate
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.splash_screen);
-
+        
         // get the shared preferences object
         SharedPreferences mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         Editor editor = mSharedPreferences.edit();
@@ -97,7 +97,7 @@ public class SplashScreenActivity extends Activity {
         }
 
         // do all the first run things
-        if (firstRun || showSplash) {
+        if (firstRun || showSplash){
             editor.putBoolean(PreferencesActivity.KEY_FIRST_RUN, false);
             editor.commit();
             startSplashScreen(splashPath);
@@ -109,7 +109,9 @@ public class SplashScreenActivity extends Activity {
 
 
     private void endSplashScreen() {
-    	startService(new Intent(SplashScreenActivity.this, ServiceManager.class));
+    	//Initialize trigger and download schedule
+        //Same as reboot
+    	startService(new Intent(SplashScreenActivity.this, MainService.class));
         // launch new activity and close splash screen
         startActivity(new Intent(SplashScreenActivity.this, MainMenuActivity.class));
         finish();
