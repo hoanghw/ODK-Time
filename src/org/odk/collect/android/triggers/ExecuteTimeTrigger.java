@@ -1,4 +1,4 @@
-package org.odk.collect.android.receivers;
+package org.odk.collect.android.triggers;
 
 import org.odk.collect.android.activities.FormChooserList;
 import org.odk.collect.android.provider.FormsProviderAPI.FormsColumns;

@@ -1,9 +1,7 @@
-package org.odk.collect.android.activities;
+package org.odk.collect.android.triggers;
 
 import java.util.Calendar;
 
-import org.odk.collect.android.receivers.DownloadRequest;
-import org.odk.collect.android.receivers.SetTimeTrigger;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -11,6 +9,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
+import android.util.Log;
 
 public class MainService extends Service {
 
@@ -18,12 +17,13 @@ public class MainService extends Service {
 	public void onCreate(){
 		super.onCreate();
 		//These receiver are called below when getBroadcast
-		//context.sendBroadcast(new Intent("settimetrigger"));
-        //context.sendBroadcast(new Intent("downloadrequest"));
+		sendBroadcast(new Intent("settimetrigger"));
+        sendBroadcast(new Intent("downloadrequest"));
         
+		Log.i("t", "MainServiceCalled");
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.HOUR_OF_DAY, 0);
-		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.MINUTE, 40);
 		calendar.set(Calendar.SECOND, 0);
 		
 		AlarmManager cron = (AlarmManager) getSystemService(Context.ALARM_SERVICE);

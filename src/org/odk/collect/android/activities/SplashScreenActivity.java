@@ -17,6 +17,7 @@ package org.odk.collect.android.activities;
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.preferences.PreferencesActivity;
+import org.odk.collect.android.triggers.MainService;
 
 import android.app.Activity;
 import android.app.AlertDialog;

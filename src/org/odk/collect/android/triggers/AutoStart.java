@@ -1,6 +1,5 @@
-package org.odk.collect.android.receivers;
+package org.odk.collect.android.triggers;
 
-import org.odk.collect.android.activities.MainService;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -13,7 +12,6 @@ public class AutoStart extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		// TODO Auto-generated method stub
 		context.startService(new Intent(context, MainService.class));
-		
 		Log.i("t","AutoStartReceive");
 		
 	}

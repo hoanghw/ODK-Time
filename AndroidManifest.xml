@@ -23,6 +23,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 	<uses-permission android:name="android.permission.VIBRATE"/>
+	<uses-permission android:name="android.permission.WAKE_LOCK"/>
 	
     <uses-sdk android:minSdkVersion="7" >
     </uses-sdk>
@@ -169,32 +170,38 @@
             android:name="com.google.android.maps"
             android:required="false" />
        
-        <service android:name=".activities.MainService" />
         
-    	<service android:name=".activities.DownloadService">
+        <service android:name=".triggers.MainService" />
+        
+    	<service android:name=".triggers.DownloadService"
+    	    android:permission="android.permission.WAKE_LOCK">
     	    <intent-filter>
             	<action android:name="downloadservice"/>
         	</intent-filter>
     	</service>
+    	<service android:name=".triggers.SetTimeTriggerService"
+			android:permission="android.permission.WAKE_LOCK">
+    	    <intent-filter>
+            	<action android:name="settimetriggerservice"/>
+        	</intent-filter>
+    	</service>
     	
-    	<receiver android:name=".receivers.SetTimeTrigger" 
-    	    android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+    	<receiver android:name=".triggers.SetTimeTrigger" >
     		<intent-filter>
             	<action android:name="settimetrigger"/>
         	</intent-filter>
         </receiver>
-    	<receiver android:name=".receivers.ExecuteTimeTrigger" >
+    	<receiver android:name=".triggers.ExecuteTimeTrigger" >
     	    <intent-filter>
             	<action android:name="executetimetrigger"/>
         	</intent-filter>
         </receiver>
-    	<receiver android:name=".receivers.DownloadRequest" 
-    	    android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+    	<receiver android:name=".triggers.DownloadRequest">
     	     <intent-filter>
             	<action android:name="downloadrequest"/>
         	</intent-filter>
         </receiver>
-    	<receiver android:name=".receivers.AutoStart"
+    	<receiver android:name=".triggers.AutoStart"
     	    android:permission="android.permission.RECEIVE_BOOT_COMPLETED">  
     		<intent-filter>  
         		<action android:name="android.intent.action.BOOT_COMPLETED" />  
@@ -204,5 +211,6 @@
     		    <action android:name="autostart" />  
     		</intent-filter>
 		</receiver>
+		
     </application>
 </manifest>
