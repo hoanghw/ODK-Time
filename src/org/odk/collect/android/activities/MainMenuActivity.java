@@ -29,6 +29,7 @@ import org.odk.collect.android.preferences.AdminPreferencesActivity;
 import org.odk.collect.android.preferences.PreferencesActivity;
 import org.odk.collect.android.provider.InstanceProviderAPI;
 import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
+import org.odk.collect.android.triggers.MainService;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -101,7 +102,10 @@ public class MainMenuActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
+		
+		//start background service
+    	startService(new Intent(MainMenuActivity.this, MainService.class));
+    	
 		// must be at the beginning of any activity that can be called from an
 		// external intent
 		Log.i(t, "Starting up, creating directories");
@@ -240,6 +244,10 @@ public class MainMenuActivity extends Activity {
 		// background
 
 		updateButtons();
+		
+		//APPEND INSTRUCTION HERE
+		TextView d = (TextView) findViewById(R.id.description);
+		d.setText("INSTRUCTIONS:\n1. Press Fill Blank Form\n2. Pick a form\n3. Swipe to advance");
 	}
 
 	@Override
@@ -259,7 +267,7 @@ public class MainMenuActivity extends Activity {
 		}
 
 		boolean send = sharedPreferences.getBoolean(
-				AdminPreferencesActivity.KEY_SEND_FINALIZED, true);
+				AdminPreferencesActivity.KEY_SEND_FINALIZED, false);
 		if (!send) {
 			mSendDataButton.setVisibility(View.GONE);
 		} else {
@@ -267,7 +275,7 @@ public class MainMenuActivity extends Activity {
 		}
 
 		boolean get_blank = sharedPreferences.getBoolean(
-				AdminPreferencesActivity.KEY_GET_BLANK, true);
+				AdminPreferencesActivity.KEY_GET_BLANK, false);
 		if (!get_blank) {
 			mGetFormsButton.setVisibility(View.GONE);
 			mGetFormsSpacer.setVisibility(View.GONE);
@@ -277,7 +285,7 @@ public class MainMenuActivity extends Activity {
 		}
 
 		boolean delete_saved = sharedPreferences.getBoolean(
-				AdminPreferencesActivity.KEY_DELETE_SAVED, true);
+				AdminPreferencesActivity.KEY_DELETE_SAVED, false);
 		if (!delete_saved) {
 			mManageFilesButton.setVisibility(View.GONE);
 		} else {

@@ -1,15 +1,11 @@
 package org.odk.collect.android.triggers;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.json.JSONObject;
 import org.odk.collect.android.listeners.DeleteFormsListener;
 import org.odk.collect.android.listeners.FormDownloaderListener;
 import org.odk.collect.android.listeners.FormListDownloaderListener;
@@ -23,82 +19,83 @@ import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class DownloadService extends Service implements FormListDownloaderListener, 
 FormDownloaderListener, DeleteFormsListener {
-	
+	public static final String TAG = "DOWNLOADSERVICE";
 	private PowerManager.WakeLock wakeLock;
 	private WifiManager.WifiLock wifiLock;
 	
 	@Override
 	public void onCreate(){
+		Log.i(TAG, "DownloadService onCreate");
 		super.onCreate();
-		Log.i("t", "DownloadServiceCalled");
-		
 		PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
 	    wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DownloadService");
-
-	    WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-	    wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL , "DownloadService");
-	    
 	    wakeLock.acquire();
+	    
+	    WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+	    wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL, "DownloadService");
 	    wifiLock.acquire();
-		    
-		Calendar now = Calendar.getInstance();
+	}
+	
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId){
 		
-		if (hasInternet()){
-			//Only delete before 4am
-			if (now.get(Calendar.HOUR_OF_DAY)<4){
-				//After deletion, it will start fetching forms
-				deleteAndDownloadForms();
-			}else{
-				//FetchingForms will kill service when done 
-				fetchingForms();
-			}
-		}else{
-			Log.i("t", "DownloadServiceRetry");
-			Utils.retryLater(this, DownloadRequest.class, 1);
-			releaseLocks();
-			stopSelf();
-		}
+		Log.i(TAG, "DownloadService onStart");
+	    switch (Utils.networkState(this)){
+	    	case Utils.NO_CONNECTION:
+	    		Log.i(TAG, "DownloadServiceRetry NO_CONNECTION");
+				Utils.retryLater(this, DownloadRequest.class, 3600);
+				stopSelf();
+				break;
+	    	case Utils.WAIT_FOR_WIFI:
+	    		Log.i(TAG, "DownloadService WAIT_FOR_WIFI");
+				Utils.retryLater(this, DownloadRequest.class, 10);
+				break;
+	    	case Utils.HAS_CONNECTION:
+	    		Log.i(TAG, "DownloadServiceRetry HAS_CONNECTION");
+	    		if (hasInternet()){
+	    			Log.i(TAG, "hasInternet True");
+	    			fetchingForms();	
+	    		}else{
+	    			Log.i(TAG, "DownloadServiceRetry NO_INTERNET");
+	    			Utils.retryLater(this, DownloadRequest.class, 3600);
+	    			stopSelf();
+	    		}
+	    		break;
+	    	default:
+	    		stopSelf();
+	    		break;
+	    }	
+		return START_STICKY;
 	}
 	
 	//There must be a better way to check Internet while Airbears not logged in
-	static public boolean hasInternet(){
-		HttpURLConnection urlConnection = null;
-		try{
-			URL url = new URL("http://23.23.166.34/gettime/?id=13");
-			urlConnection = (HttpURLConnection) url.openConnection();
-			urlConnection.setConnectTimeout(600);
-			urlConnection.setReadTimeout(600);
-			String line;
-			StringBuilder builder = new StringBuilder();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-			while((line = reader.readLine()) != null) {
-				builder.append(line);
-			}
-			JSONObject json = new JSONObject(builder.toString());
-			return true;
-		} catch (Exception e) {
-			return false;
-		}
-		finally {
-			if (urlConnection != null)
-				urlConnection.disconnect();
-		}
+	public boolean hasInternet(){
+		SharedPreferences mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+		String user = mSharedPreferences.getString("username","user");
+		Map <String,List<Calendar>> triggers = Utils.getTimeTrigger(user);
+		return triggers != null;
 	}
+	
 	public void fetchingForms(){
-		Log.i("t", "fetchingFormsCalled");
+		Log.i(TAG, "fetchingFormsCalled");
 		
 		mFormNamesAndURLs = new HashMap<String, FormDetails>();
         if (mDownloadFormListTask != null &&
         	mDownloadFormListTask.getStatus() != AsyncTask.Status.FINISHED) {
+        	//Utils.retryLater(this, DownloadRequest.class, 3600);
+        	Log.i(TAG, "fetchingForms Already doing the download");
+			stopSelf();
         	return; // we are already doing the download!!!
         } else if (mDownloadFormListTask != null) {
         	mDownloadFormListTask.setDownloaderListener(null);
@@ -109,32 +106,13 @@ FormDownloaderListener, DeleteFormsListener {
         mDownloadFormListTask.setDownloaderListener(this);
         mDownloadFormListTask.execute();
 	}
-
-	private DownloadFormListTask mDownloadFormListTask;
-    private DownloadFormsTask mDownloadFormsTask;
-    private HashMap<String, FormDetails> mFormNamesAndURLs = new HashMap<String,FormDetails>();
-    
-    @Override
-	public void formsDownloadingComplete(HashMap<FormDetails, String> result) {
-		// TODO Auto-generated method stub
-    	Log.i("t", "downloadFormsDone");
-		if (mDownloadFormsTask != null) {
-            mDownloadFormsTask.setDownloaderListener(null);
-        }
-		releaseLocks();
-		stopSelf();
-	}
-	@Override
-	public void progressUpdate(String currentFile, int progress, int total) {
-		// TODO Auto-generated method stub
-		
-	}
+	
 	@Override
 	public void formListDownloadingComplete(HashMap<String, FormDetails> result) {
 		// TODO Auto-generated method stub
 		if (result == null){
-			Log.i("t", "fetchingFormsDone No Result");
-			releaseLocks();
+			Log.i(TAG, "fetchingFormsDone No Result");
+			Utils.retryLater(this, DownloadRequest.class, 3600);
 			stopSelf();
 			return;
 		}
@@ -142,27 +120,32 @@ FormDownloaderListener, DeleteFormsListener {
             // need authorization
 			// refer to FormDownloadList/onCreateDiaglog(AUTH_DIALOG)
 			// then call downloadForms() again
-			Log.i("t", "fetchingFormsDone DL_AUTH_REQUIRED");
-			releaseLocks();
+			Log.i(TAG, "fetchingFormsDone DL_AUTH_REQUIRED");
+			Utils.retryLater(this, DownloadRequest.class, 3600);
 			stopSelf();
             return;
         } else if (result.containsKey(DownloadFormListTask.DL_ERROR_MSG)) {
             // Download failed
-        	Log.i("t", "fetchingFormsDone ERROR_MSG" + result.get(DownloadFormListTask.DL_ERROR_MSG));
-        	releaseLocks();
+        	Log.i(TAG, "fetchingFormsDone ERROR_MSG" + result.get(DownloadFormListTask.DL_ERROR_MSG));
+        	Utils.retryLater(this, DownloadRequest.class, 3600);
         	stopSelf();
             return;
         } else {
             // Everything worked. Clear the list and add the results.
-        	Log.i("t", "fetchingFormsDone Success");
+        	Log.i(TAG, "fetchingFormsDone Success");
             mFormNamesAndURLs = result;
-            downloadAllFiles();
+            downloadAllForms();
         }
 	}
-	@SuppressWarnings("unchecked")
-	private void downloadAllFiles() {
-		Log.i("t", "downloadAllFilesCalled");
-        ArrayList<FormDetails> filesToDownload = new ArrayList<FormDetails>();
+
+	private DownloadFormListTask mDownloadFormListTask;
+    private DownloadFormsTask mDownloadFormsTask;
+    private HashMap<String, FormDetails> mFormNamesAndURLs = new HashMap<String,FormDetails>();
+    ArrayList<FormDetails> filesToDownload = new ArrayList<FormDetails>();
+	
+    @SuppressWarnings("unchecked")
+	private void downloadAllForms() {
+		Log.i(TAG, "downloadAllFormsCalled");
         for (Map.Entry<String, FormDetails> entry : mFormNamesAndURLs.entrySet()) {
 		    //String key = entry.getKey();
 		    FormDetails value = entry.getValue();
@@ -172,29 +155,40 @@ FormDownloaderListener, DeleteFormsListener {
         mDownloadFormsTask.setDownloaderListener(this);
         mDownloadFormsTask.execute(filesToDownload); 
     }
-	@Override
-	public IBinder onBind(Intent intent) {
+    
+    @Override
+	public void formsDownloadingComplete(HashMap<FormDetails, String> result) {
 		// TODO Auto-generated method stub
-		return null;
+    	Log.i(TAG, "downloadFormsDone");
+		if (mDownloadFormsTask != null) {
+            mDownloadFormsTask.setDownloaderListener(null);
+        }
+		deleteForms();
 	}
-	
-	DeleteFormsTask mDeleteFormsTask = null;
-	private void deleteAndDownloadForms() {	
-		Log.i("t", "deleteFormsCalled");
+    
+    DeleteFormsTask mDeleteFormsTask = null;
+	private void deleteForms() {	
+		Log.i(TAG, "deleteFormsCalled");
 		Context context = DownloadService.this;
-		ArrayList<Long> allForms = new ArrayList<Long>();
+		ArrayList<Long> deletingForms = new ArrayList<Long>();
 		Cursor c = null;
 		try{
 			ContentResolver cr = context.getContentResolver();
-		    c = cr.query(FormsColumns.CONTENT_URI, null, null, null, null);
+			String where = FormsColumns.JR_FORM_ID +" NOT IN (\"";
+			for (int i = 0; i<filesToDownload.size(); i++) {
+	            where += filesToDownload.get(i).formID+"\",\"";
+	        }
+			where+="\")";
+		    c = cr.query(FormsColumns.CONTENT_URI, null, where, null, null);
 		    if (c == null) {
-	            Log.e("t", "Forms Content Provider returned NULL");
+	            Log.e(TAG, "Forms Content Provider returned NULL");
+	            stopSelf();
 	            return;
 	        }
 	        c.moveToPosition(-1);
             while (c.moveToNext()) {
             	long k = c.getLong(c.getColumnIndex(FormsColumns._ID));
-            	allForms.add(k);
+            	deletingForms.add(k);
             }
 		} catch (Exception e){
 			
@@ -206,16 +200,38 @@ FormDownloaderListener, DeleteFormsListener {
 			mDeleteFormsTask = new DeleteFormsTask();
 			mDeleteFormsTask.setContentResolver(getContentResolver());
 			mDeleteFormsTask.setDeleteListener(this);
-			mDeleteFormsTask.execute(allForms
-					.toArray(new Long[allForms.size()]));
+			mDeleteFormsTask.execute(deletingForms
+					.toArray(new Long[deletingForms.size()]));
+		}else{
+			stopSelf();
 		}
 	}
+	
 	@Override
 	public void deleteComplete(int deletedForms) {
 		// TODO Auto-generated method stub
-		Log.i("t", "deleteFormsDone");
-		fetchingForms();
+		Log.i(TAG, "deleteFormsDone " + deletedForms);
+		stopSelf();
 	}
+	
+	@Override
+	public void progressUpdate(String currentFile, int progress, int total) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public IBinder onBind(Intent intent) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public void onDestroy(){
+		releaseLocks();
+		super.onDestroy();
+	}
+	
 	public void releaseLocks(){
 		wakeLock.release();
 		wifiLock.release();

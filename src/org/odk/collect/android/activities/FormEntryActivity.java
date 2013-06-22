@@ -59,8 +59,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
+//import android.graphics.drawable.BitmapDrawable;
+//import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -91,7 +91,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
+//import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -903,7 +903,13 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
 		switch (event) {
 		case FormEntryController.EVENT_BEGINNING_OF_FORM:
-			View startView = View
+			
+			//Go straight to 1st question
+			event = formController.stepToNextScreenEvent();
+			return createView(event, advancingPage);
+			
+			//Get rid of the instruction screen
+			/*View startView = View
 					.inflate(this, R.layout.form_entry_start, null);
 			setTitle(getString(R.string.app_name) + " > "
 					+ formController.getFormTitle());
@@ -954,6 +960,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 					useButtons = true;
 				}
 			}
+			
 			if (useSwipe && !useButtons) {
 				d.setText(getString(R.string.swipe_instructions,
 						formController.getFormTitle()));
@@ -977,7 +984,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 				mNextButton.setEnabled(true);
 			}
 
-			return startView;
+			return startView;*/
 		case FormEntryController.EVENT_END_OF_FORM:
 			View endView = View.inflate(this, R.layout.form_entry_end, null);
 			((TextView) endView.findViewById(R.id.description))
@@ -990,7 +997,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 			instanceComplete.setChecked(isInstanceComplete(true));
 
 			if (!mAdminPreferences.getBoolean(
-					AdminPreferencesActivity.KEY_MARK_AS_FINALIZED, true)) {
+					AdminPreferencesActivity.KEY_MARK_AS_FINALIZED, false)) {
 				instanceComplete.setVisibility(View.GONE);
 			}
 
@@ -1057,7 +1064,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
 			// override the visibility settings based upon admin preferences
 			if (!mAdminPreferences.getBoolean(
-					AdminPreferencesActivity.KEY_SAVE_AS, true)) {
+					AdminPreferencesActivity.KEY_SAVE_AS, false)) {
 				saveAs.setVisibility(View.GONE);
 				TextView sa = (TextView) endView
 						.findViewById(R.id.save_form_as);

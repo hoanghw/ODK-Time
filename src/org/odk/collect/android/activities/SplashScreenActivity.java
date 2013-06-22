@@ -17,7 +17,7 @@ package org.odk.collect.android.activities;
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.preferences.PreferencesActivity;
-import org.odk.collect.android.triggers.MainService;
+import org.odk.collect.android.triggers.LogInActivity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -110,11 +110,13 @@ public class SplashScreenActivity extends Activity {
 
 
     private void endSplashScreen() {
-    	//Initialize trigger and download schedule
-        //Same as reboot
-    	startService(new Intent(SplashScreenActivity.this, MainService.class));
-        // launch new activity and close splash screen
-        startActivity(new Intent(SplashScreenActivity.this, MainMenuActivity.class));
+    	SharedPreferences mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+    	if (mSharedPreferences.getBoolean("IS_LOGGED_IN", false)){
+    		// launch new activity and close splash screen
+            startActivity(new Intent(SplashScreenActivity.this, MainMenuActivity.class));
+        }else{
+         	startActivity(new Intent(SplashScreenActivity.this, LogInActivity.class));
+        }
         finish();
     }
 

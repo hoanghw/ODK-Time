@@ -3,7 +3,6 @@ package org.odk.collect.android.triggers;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.wifi.WifiManager;
 import android.util.Log;
 
 

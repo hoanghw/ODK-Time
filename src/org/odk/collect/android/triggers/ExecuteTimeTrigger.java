@@ -1,5 +1,8 @@
 package org.odk.collect.android.triggers;
 
+import java.util.Calendar;
+
+import org.odk.collect.android.R;
 import org.odk.collect.android.activities.FormChooserList;
 import org.odk.collect.android.provider.FormsProviderAPI.FormsColumns;
 
@@ -13,6 +16,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.util.Log;
 
 
 public class ExecuteTimeTrigger extends BroadcastReceiver {
@@ -21,7 +25,7 @@ public class ExecuteTimeTrigger extends BroadcastReceiver {
 		// TODO Auto-generated method stub
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
 		
-		int icon = android.R.drawable.star_on;
+		int icon = R.drawable.notes;
 		CharSequence tickerText = "A Friendly Reminder from QT";
 		long when = System.currentTimeMillis();
 		
@@ -37,6 +41,7 @@ public class ExecuteTimeTrigger extends BroadcastReceiver {
 		PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_ONE_SHOT);
 		notification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
 		notificationManager.notify(form.hashCode(), notification);
+		Log.i("t","ExecuteTimeReceived for form "+form+" at "+Calendar.getInstance());
 	}
 	
 	//consider default form?

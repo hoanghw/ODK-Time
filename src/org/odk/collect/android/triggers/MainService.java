@@ -22,8 +22,8 @@ public class MainService extends Service {
         
 		Log.i("t", "MainServiceCalled");
 		Calendar calendar = Calendar.getInstance();
-		calendar.set(Calendar.HOUR_OF_DAY, 0);
-		calendar.set(Calendar.MINUTE, 40);
+		calendar.set(Calendar.HOUR_OF_DAY, 4);
+		calendar.set(Calendar.MINUTE, 6);
 		calendar.set(Calendar.SECOND, 0);
 		
 		AlarmManager cron = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
@@ -45,6 +45,14 @@ public class MainService extends Service {
 				pDownloadRequest);
 		
 	}
+	
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+	    // We don't want this service to continue running if it is explicitly
+	    // stopped, so return not sticky.
+	    return START_NOT_STICKY;
+	}
+	
 	@Override
 	public IBinder onBind(Intent intent) {
 		// TODO Auto-generated method stub
