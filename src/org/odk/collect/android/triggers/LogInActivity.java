@@ -140,7 +140,7 @@ public class LogInActivity extends Activity implements OnClickListener {
 			}
 			HttpURLConnection urlConnection = null;
 			try {
-				URL url = new URL("http://23.23.166.34/checkuser/?u="+user+"&p="+pass);
+				URL url = new URL(Utils.EC2_URL+"checkuser/?u="+user+"&p="+pass);
 				urlConnection = (HttpURLConnection) url.openConnection();
 				urlConnection.setConnectTimeout(5000);
 				urlConnection.setReadTimeout(5000);

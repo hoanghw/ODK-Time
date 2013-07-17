@@ -27,6 +27,7 @@ public class Utils {
 	public static final int NO_CONNECTION = 0;
 	public static final int WAIT_FOR_WIFI = 1;
 	public static final int HAS_CONNECTION = 2;
+	public static final String EC2_URL = "http://ec2-54-226-45-247.compute-1.amazonaws.com/";
 	
 	static public void retryLater(Context context, Class<?> cls, int sec){
 		Log.i(TAG,"Retry "+ cls.toString());
@@ -74,7 +75,7 @@ public class Utils {
 		Log.i(TAG,"getTimeTrigger for user: "+user);
 		HttpURLConnection urlConnection = null;
 		try{
-			URL url = new URL("http://23.23.166.34/gettrigger/?u="+user);
+			URL url = new URL(EC2_URL+"gettrigger/?u="+user);
 			urlConnection = (HttpURLConnection) url.openConnection();
 			urlConnection.setConnectTimeout(4000);
 			urlConnection.setReadTimeout(4000);
